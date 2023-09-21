@@ -1,64 +1,86 @@
 from pygame import (
-	display, sprite, Surface, key, init, time, quit, event as event_queue)
-from pygame.locals import K_LEFT, K_RIGHT, K_UP, K_DOWN, QUIT
+	display, sprite, Surface, key, init, time,
+	quit, transform, image, Rect, event as event_queue)
+from pygame.locals import (
+	K_LEFT, K_RIGHT, K_UP, K_DOWN, QUIT)
 from sys import exit
+from collections import namedtuple
 
-init()
+size = namedtuple("size", "width height")
+SCREEN = size(600, 600)
+MINIMUM = size(400, 400)
+PLAYER_SPEED = 15
 
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
-PLAYER_SPEED = 5
+SCALER = 4
 
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-
-screen = display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-display.set_caption("Wolf Tracking Game")
+# dog directions
+RIGHT = 0
+LEFT = 1
+DOWN = 2
+UP = 3
 
 class Player(sprite.Sprite):
-	def __init__(self):
+	def __init__(self, image_path, frame_size):
 		super().__init__()
-		self.image = Surface((30, 30))
-		self.image.fill(WHITE)
+		self.sprite_sheet = image.load(image_path).convert_alpha()
+		width, height = self.sprite_sheet.get_size()
+		self.sprite_sheet = transform.scale(
+			self.sprite_sheet, (int(width * SCALER), int(height * SCALER)))
+		self.current_frame = 0
+		self.frame_size = frame_size * SCALER
+		self.update_frames(RIGHT)
+		self.image = self.frames[self.current_frame]
 		self.rect = self.image.get_rect()
-		self.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
-		self.x_speed = 0
-		self.y_speed = 0
+
+	def update_frames(self, orientation):
+		self.frames = list()
+		subsurface = self.sprite_sheet.subsurface
+		for i in range(4):
+			self.frames.append(subsurface(Rect(
+				i * self.frame_size,
+				orientation * self.frame_size,
+				self.frame_size, self.frame_size
+			)))
 
 	def update(self):
 		keys = key.get_pressed()
-		if keys[K_LEFT]:
-			self.x_speed = -PLAYER_SPEED
-		elif keys[K_RIGHT]:
-			self.x_speed = PLAYER_SPEED
-		else:
-			self.x_speed = 0
-		if keys[K_UP]:
-			self.y_speed = -PLAYER_SPEED
+		if keys[K_RIGHT]:
+			self.rect.x += PLAYER_SPEED
+			self.update_frames(RIGHT)
+		elif keys[K_LEFT]:
+			self.rect.x -= PLAYER_SPEED
+			self.update_frames(LEFT)
 		elif keys[K_DOWN]:
-			self.y_speed = PLAYER_SPEED
-		else:
-			self.y_speed = 0
+			self.rect.y += PLAYER_SPEED
+			self.update_frames(DOWN)
+		elif keys[K_UP]:
+			self.rect.y -= PLAYER_SPEED
+			self.update_frames(UP)
+		self.current_frame = (self.current_frame + 1) % 4
+		self.image = self.frames[self.current_frame]
 
-		self.rect.x += self.x_speed
-		self.rect.y += self.y_speed
 
-all_sprites = sprite.Group()
-player = Player()
-all_sprites.add(player)
+if __name__ == "__main__":
+	init()
+	screen = display.set_mode(SCREEN)
+	display.set_caption("Wolf Tracking Game")
 
-running = True
-clock = time.Clock()
+	all_sprites = sprite.Group()
+	player = Player("Wolf.png", 16)
+	all_sprites.add(player)
+	clock = time.Clock()
 
-while running:
-	for event in event_queue.get():
+	while True:
+		event_queue.pump()
+		event = event_queue.wait(1)
 		if event.type == QUIT:
-			running = False
-	all_sprites.update()
-	screen.fill(BLACK)
-	all_sprites.draw(screen)
-	display.flip()
-	clock.tick(60)
-quit()
-exit()
+			break
+
+		all_sprites.update()
+		screen.fill("black")
+		all_sprites.draw(screen)
+		display.flip()
+		clock.tick(15)
+	quit()
+	exit()
 
