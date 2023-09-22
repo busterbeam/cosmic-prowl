@@ -10,10 +10,8 @@ from random import randint
 size = namedtuple("size", "width height")
 SCREEN = size(600, 600)
 MINIMUM = size(400, 400)
-PLAYER_SPEED = 16
+PLAYER_SPEED = 4
 TILE_SIZE = 16
-
-SCALER = 4
 
 # sprite state
 RIGHT_IDLE = 0
@@ -34,26 +32,20 @@ class Shroom(sprite.Sprite):
 	def __init__(self, image_path, frame_size, init_position):
 		super().__init__()
 		surface = image.load(image_path).convert_alpha()
-		surface = surface.subsurface(
+		self.image = surface.subsurface(
 			3 * frame_size, 2 * frame_size, frame_size, frame_size)
-		width, height = surface.get_size()
-		self.image = transform.scale(surface, (width * SCALER, height * SCALER))
 		self.rect = Rect(
-			(init_position[0]*SCALER, init_position[1]*SCALER),
-			self.image.get_rect()[2:])
+			init_position, self.image.get_rect()[2:])
 
 
 class Player(sprite.Sprite):
 	def __init__(self, image_path, frame_size):
 		super().__init__()
 		self.sprite_sheet = image.load(image_path).convert_alpha()
-		width, height = self.sprite_sheet.get_size()
-		self.sprite_sheet = transform.scale(
-			self.sprite_sheet, (width * SCALER, height * SCALER))
 		self.current_frame = 0
 		self.state = RIGHT_IDLE
 		self.run = False
-		self.frame_size = frame_size * SCALER
+		self.frame_size = frame_size
 		self.update_frames()
 		self.image = self.frames[self.current_frame]
 		self.rect = self.image.get_rect()
@@ -100,12 +92,11 @@ class Player(sprite.Sprite):
 		self.current_frame = (self.current_frame + 1) % 4
 		self.image = self.frames[self.current_frame]
 
-
-if __name__ == "__main__":
+def main():
 	init()
 	screen = display.set_mode(SCREEN)
 	display.set_caption("Wolf Tracking Game")
-
+	game_surface = Surface((200, 200))
 	all_sprites = sprite.Group()
 	player = Player("Wolf.png", TILE_SIZE)
 	all_sprites.add(player)
@@ -118,18 +109,21 @@ if __name__ == "__main__":
 			)
 		))
 	clock = time.Clock()
-
-	while True:
-		event_queue.pump()
-		event = event_queue.wait(1)
-		if event.type == QUIT:
-			break
-
+	event_queue.pump()
+	event = event_queue.wait(1)
+	while event.type != QUIT:
 		all_sprites.update()
-		screen.fill("black")
-		all_sprites.draw(screen)
+		game_surface.fill("black")
+		all_sprites.draw(game_surface)
+		frame = transform.scale(game_surface, SCREEN)
+		screen.blit(frame, (0, 0))
 		display.flip()
 		clock.tick(15)
+		event_queue.pump()
+		event = event_queue.wait(1)
 	quit()
 	exit()
 
+
+if __name__ == "__main__":
+	main()
