@@ -1,19 +1,41 @@
+""" Cosmic Prowl entry """
+
 from pygame import (
-	display, sprite, Surface, key, init, time, math,
-	quit, transform, image, Rect, gfxdraw, event as event_queue)
+	display,
+	sprite,
+	Surface,
+	key,
+	init,
+	time,
+	quit as game_quit,
+	transform,
+	image,
+	Rect,
+	event as event_queue,
+)
 from pygame.math import Vector2
 from pygame.locals import (
-	K_LEFT, K_RIGHT, K_UP, K_DOWN, K_w, K_a, K_s, K_d, K_LSHIFT, QUIT)
-from sys import exit
+	K_LEFT,
+	K_RIGHT,
+	K_UP,
+	K_DOWN,
+	K_w,
+	K_a,
+	K_s,
+	K_d,
+	K_LSHIFT,
+	QUIT,
+)
+import sys
 from collections import namedtuple
 from itertools import permutations
 from math import hypot
 from random import randint
-from multiprocessing import Pool
+from sys import float_info
 
-size = namedtuple("size", "width height")
-SCREEN = size(600, 600)
-MINIMUM = size(400, 400)
+Size = namedtuple("Size", "width height")
+SCREEN = Size(600, 600)
+MINIMUM = Size(400, 400)
 PLAYER_SPEED = 4
 TILE_SIZE = 16
 
@@ -31,77 +53,81 @@ LEFT_RUNNING = 9
 DOWN_RUNNING = 10
 UP_RUNNING = 11
 
+
 class Particles(list):
+	"""Particles list"""
+
 	def update(self):
+		"""Update particle nature"""
 		for particle_0, particle_1 in permutations(self, 2):
 			particle_0.collide(particle_1)
-	
+		for particle in self:
+			particle.update()
+
 	def draw(self, surface):
+		"""Draw particles to surface"""
 		for particle in self:
 			surface.fill("green", particle)
 
+
 class Particle:
+	"""Point pixel with inner and outer boundaries"""
+
 	def __init__(self, position, vector, radius):
 		self.pos = Vector2(*position)
 		self.vector = Vector2(*vector)
 		self.radius = namedtuple("radius", "inner outer")(*radius)
-	
+
 	def rect(self):
+		"""rectangle"""
 		return Rect(self.pos, (1, 1))
-	
+
 	def update(self):
-		pass
-	
+		"""position update based on velocity"""
+		self.pos.x += self.vector.x
+		self.pos.y += self.vector.y
+
 	def collide(self, body):
+		"""collision physics"""
 		delta_x, delta_y = self.pos.x - body.pos.x, self.pos.y - body.pos.y
 		delta = hypot(delta_x, delta_y)
-		
+
 		if delta < self.radius.outer + body.radius.outer:
 			delta_vector_x = self.vector.x - body.vector.x
 			delta_vector_y = self.vector.y - body.vector.y
 			try:
 				_sin = delta_x / delta
 			except ZeroDivisionError:
-				_sin = 0
+				_sin = float_info.min
 			try:
 				_cos = delta_y / delta
 			except ZeroDivisionError:
-				_cos = 0
-			delta_radius = (self.radius.outer + body.radius.outer - delta) / 2
-			delta_x_2, delta_y_2 = _sin * delta_radius, _cos * delta_radius
+				_cos = float_info.min
 			try:
 				h = (delta_x * delta_vector_x + delta_y * delta_vector_y) / delta
 			except ZeroDivisionError:
-				h = 0
+				h = float_info.min
 			new_delta_vector_x, new_delta_vector_y = -h * _sin, -h * _cos
 			if delta < self.radius.inner + body.radius.inner:
-				self.pos.x += delta_x_2
-				self.pos.y += delta_y_2
-				body.pos.x -= delta_x_2
-				body.pos.y -= delta_y_2
-				self.vector.x += new_delta_vector_x
-				self.vector.y += new_delta_vector_y
-				body.vector.x -= new_delta_vector_x
-				body.vector.y -= new_delta_vector_y
-			else:
-				self.pos.x -= delta_x_2
-				self.pos.y -= delta_y_2
-				body.pos.x += delta_x_2
-				body.pos.y += delta_y_2
 				self.vector.x -= new_delta_vector_x
 				self.vector.y -= new_delta_vector_y
 				body.vector.x += new_delta_vector_x
 				body.vector.y += new_delta_vector_y
-		
+			else:
+				self.vector.x += new_delta_vector_x
+				self.vector.y += new_delta_vector_y
+				body.vector.x -= new_delta_vector_x
+				body.vector.y -= new_delta_vector_y
+
 
 class Shroom(sprite.Sprite):
 	def __init__(self, image_path, frame_size, init_position):
 		super().__init__()
 		surface = image.load(image_path).convert_alpha()
 		self.image = surface.subsurface(
-			3 * frame_size, 2 * frame_size, frame_size, frame_size)
-		self.rect = Rect(
-			init_position, self.image.get_rect()[2:])
+			3 * frame_size, 2 * frame_size, frame_size, frame_size
+		)
+		self.rect = Rect(init_position, self.image.get_rect()[2:])
 
 
 class Player(sprite.Sprite):
@@ -120,11 +146,16 @@ class Player(sprite.Sprite):
 		self.frames = list()
 		subsurface = self.sprite_sheet.subsurface
 		for i in range(4):
-			self.frames.append(subsurface(Rect(
-				i * self.frame_size,
-				self.state * self.frame_size,
-				self.frame_size, self.frame_size
-			)))
+			self.frames.append(
+				subsurface(
+					Rect(
+						i * self.frame_size,
+						self.state * self.frame_size,
+						self.frame_size,
+						self.frame_size,
+					)
+				)
+			)
 
 	def update(self):
 		keys = key.get_pressed()
@@ -158,6 +189,7 @@ class Player(sprite.Sprite):
 		self.current_frame = (self.current_frame + 1) % 4
 		self.image = self.frames[self.current_frame]
 
+
 def main():
 	init()
 	screen = display.set_mode(SCREEN)
@@ -167,20 +199,20 @@ def main():
 	player = Player("Wolf.png", TILE_SIZE)
 	all_sprites.add(player)
 	for _ in range(10):
-		all_sprites.add(Shroom(
-			"GrassNDirt.png", TILE_SIZE,
-			(
-				randint(0, 10) * TILE_SIZE,
-				randint(0, 10) * TILE_SIZE
+		all_sprites.add(
+			Shroom(
+				"GrassNDirt.png",
+				TILE_SIZE,
+				(randint(0, 10) * TILE_SIZE, randint(0, 10) * TILE_SIZE),
 			)
-		))
+		)
 	particles = Particles()
-	for _ in range(400):
+	for _ in range(100):
 		particles.append(
 			Particle(
 				(randint(0, 200), randint(0, 200)),
-				(randint(0, 1), randint(0, 1)),
-				(1, 2)
+				(randint(-1, 1), randint(-1, 1)),
+				(2, 6),
 			)
 		)
 	clock = time.Clock()
@@ -198,9 +230,9 @@ def main():
 		clock.tick(15)
 		event_queue.pump()
 		event = event_queue.wait(1)
-	quit()
-	exit()
+	game_quit()
 
 
 if __name__ == "__main__":
 	main()
+	sys.exit()
