@@ -156,7 +156,7 @@ def main():
 			Particle(
 				(randint(0, 200), randint(0, 200)),
 				(randint(-1, 1), randint(-1, 1)),
-				(2, 6),
+				(2, 4),
 			)
 		)
 	clock = time.Clock()
@@ -164,6 +164,7 @@ def main():
 	event = event_queue.wait(1)
 	while event.type != QUIT:
 		all_sprites.update()
+		particles.collisions(game_surface.get_bounding_rect())
 		particles.update()
 		game_surface.fill("black")
 		all_sprites.draw(game_surface)
