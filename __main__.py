@@ -5,7 +5,6 @@ import sys
 
 from collections import namedtuple
 from random import randint
-from characters import Player, Bear
 
 from pygame import (
 	display,
@@ -22,6 +21,7 @@ from pygame import (
 from pygame.locals import QUIT
 
 from particles import Particles, Particle
+from characters import Player, Bear
 
 Size = namedtuple("Size", "width height")
 SCREEN = Size(600, 600)
@@ -41,15 +41,14 @@ class Shroom(sprite.Sprite):
 			3 * TILE_SIZE, 2 * TILE_SIZE, TILE_SIZE, TILE_SIZE
 		)
 		self.rect = Rect(origin, self.image.get_rect()[2:])
-		self.particle = (
-			(randint(-10, 10), randint(-10, 10)), (1, 2), "green", 2)
+		self.particle = ((randint(-10, 10), randint(-10, 10)), (1, 2), "green", 2)
 
 
 def generate(particles, sprites):
+	"""Get all sprites to emit particles"""
 	for sprite in sprites:
 		particles.append(
-			Particle(
-				(sprite.rect.centerx, sprite.rect.centery), *sprite.particle)
+			Particle((sprite.rect.centerx, sprite.rect.centery), *sprite.particle)
 		)
 
 
@@ -61,9 +60,7 @@ def main():
 	game_surface = Surface(MINIMUM)
 	all_sprites = sprite.Group()
 	player = Player("Wolf.png", (30, 30))
-	bear = Bear("Bear.png", (200, 200))
 	all_sprites.add(player)
-	all_sprites.add(bear)
 	for _ in range(10):
 		all_sprites.add(
 			Shroom(
@@ -81,6 +78,8 @@ def main():
 				"cyan",
 			)
 		)
+	bear = Bear("Bear.png", (200, 200), game_surface, particles)
+	all_sprites.add(bear)
 	clock = time.Clock()
 	event_queue.pump()
 	event = event_queue.wait(1)
