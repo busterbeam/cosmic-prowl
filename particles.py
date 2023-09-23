@@ -20,7 +20,7 @@ def updator(particle):
 def clamp(lower, x, upper):
 	return min(max(x, lower), upper)
 
-MAX_SPEED = 1
+MAX_SPEED = 2
 
 class Particles(list):
 	"""Particles list"""
@@ -46,10 +46,8 @@ class Particles(list):
 
 	def draw(self, surface):
 		"""Draw particles to surface"""
-		for particle in filter(lambda x: x.visible, self):
+		for particle in self: # filter(lambda x: x.visible, self):
 			surface.fill(particle.color, particle)
-		# for particle in self:
-		# 	surface.fill(particle.color, particle)
 
 
 class Particle:

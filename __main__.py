@@ -58,15 +58,56 @@ UP_RUNNING = 11
 class Shroom(sprite.Sprite):
 	"""Object Sprite"""
 
-	def __init__(self, image_path, frame_size, init_position):
+	def __init__(self, image_path, origin):
 		"""Initializer"""
 		super().__init__()
 		surface = image.load(image_path).convert_alpha()
 		self.image = surface.subsurface(
-			3 * frame_size, 2 * frame_size, frame_size, frame_size
+			3 * TILE_SIZE, 2 * TILE_SIZE, TILE_SIZE, TILE_SIZE
 		)
-		self.rect = Rect(init_position, self.image.get_rect()[2:])
-		self.particle = ("green", 2)
+		self.rect = Rect(origin, self.image.get_rect()[2:])
+		self.particle = (
+			(randint(-10, 10), randint(-10, 10)), (1, 2), "green", 2)
+
+
+class Bear(sprite.Sprite):
+	"""Object Sprite"""
+
+	def __init__(self, image_path, origin):
+		"""Initializer"""
+		super().__init__()
+		self.sprite_sheet = image.load(image_path).convert_alpha()
+		self.run = (1, 0)
+		self.state = RIGHT_IDLE
+		self.current_frame = 0
+		self.update_frames()
+		self.image = self.frames[self.current_frame]
+		self.rect = self.image.get_rect()
+		self.rect.centerx = origin[0]
+		self.rect.centery = origin[1]
+		self.particle = ((0, 0), (2, 16), "red", 20)
+		self.last_seen = -1
+	
+	def update_frames(self):
+		"""Change what frames are being used for the animation"""
+		self.frames = []
+		subsurface = self.sprite_sheet.subsurface
+		for i in range(4):
+			self.frames.append(
+				subsurface(
+					Rect(
+						i * 24,
+						self.state * 24,
+						24, 24,
+					)
+				)
+			)
+	
+	def random_move(self):
+		pass
+	
+	def seek(self):
+		pass
 
 
 class Player(sprite.Sprite):
@@ -85,9 +126,9 @@ class Player(sprite.Sprite):
 		self.rect = self.image.get_rect()
 		self.rect.centerx = origin[0]
 		self.rect.centery = origin[1]
-		self.particle = ("red", 50)
+		self.particle = ((0, 0), (2, 16), "pink", 20)
 		self.set_cone()
-	
+
 	def set_cone(self):
 		if (self.state % 4) == RIGHT_IDLE:
 			self.cone.centerx = self.rect.centerx + TILE_SIZE
@@ -157,7 +198,7 @@ def generate(particles, sprites):
 		particles.append(
 			Particle(
 				(sprite.rect.centerx, sprite.rect.centery),
-				(0, 0), (2, 16), *sprite.particle
+				*sprite.particle
 			))
 
 
@@ -169,12 +210,13 @@ def main():
 	game_surface = Surface((200, 200))
 	all_sprites = sprite.Group()
 	player = Player("Wolf.png", (30, 30))
+	bear = Bear("Bear.png", (60, 60))
 	all_sprites.add(player)
+	all_sprites.add(bear)
 	for _ in range(10):
 		all_sprites.add(
 			Shroom(
 				"GrassNDirt.png",
-				TILE_SIZE,
 				(randint(0, 10) * TILE_SIZE, randint(0, 10) * TILE_SIZE),
 			)
 		)
@@ -203,7 +245,7 @@ def main():
 		display.flip()
 		clock.tick(15)
 		event_queue.pump()
-		event = event_queue.wait(1)
+		event = event_queue.wait(5)
 	game_quit()
 
 
