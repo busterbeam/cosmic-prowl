@@ -39,25 +39,29 @@ class Particles(list):
 
 	def update(self):
 		"""Update particle nature"""
-		# self.pool.map(updator, self)
 		for particle in self:
+			if particle.decay == 0:
+				self.remove(particle)
 			particle.update()
 
 	def draw(self, surface):
 		"""Draw particles to surface"""
 		for particle in filter(lambda x: x.visible, self):
 			surface.fill(particle.color, particle)
+		# for particle in self:
+		# 	surface.fill(particle.color, particle)
 
 
 class Particle:
 	"""Point pixel with inner and outer boundaries"""
 
-	def __init__(self, position, vector, radius, color):
+	def __init__(self, position, vector, radius, color, decay=-1):
 		self.pos = Vector2(*position)
 		self.vector = Vector2(*vector)
 		self.radius = radius
 		self.visible = False
 		self.color = color
+		self.decay = decay
 
 	def rect(self):
 		"""rectangle"""
@@ -69,6 +73,7 @@ class Particle:
 		self.vector.y = clamp(-MAX_SPEED, self.vector.y, MAX_SPEED)
 		self.pos.x += self.vector.x
 		self.pos.y += self.vector.y
+		self.decay -= 1
 		
 	def smell_range(self, player):
 		if player.cone.top > self.pos.y or self.pos.y > player.cone.bottom:

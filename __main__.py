@@ -66,6 +66,7 @@ class Shroom(sprite.Sprite):
 			3 * frame_size, 2 * frame_size, frame_size, frame_size
 		)
 		self.rect = Rect(init_position, self.image.get_rect()[2:])
+		self.particle = ("green", 2)
 
 
 class Player(sprite.Sprite):
@@ -84,6 +85,7 @@ class Player(sprite.Sprite):
 		self.rect = self.image.get_rect()
 		self.rect.centerx = origin[0]
 		self.rect.centery = origin[1]
+		self.particle = ("red", 50)
 		self.set_cone()
 	
 	def set_cone(self):
@@ -150,6 +152,14 @@ class Player(sprite.Sprite):
 		self.image = self.frames[self.current_frame]
 
 
+def generate(particles, sprites):
+	for sprite in sprites:
+		particles.append(
+			Particle(
+				(sprite.rect.centerx, sprite.rect.centery),
+				(0, 0), (2, 16), *sprite.particle
+			))
+
 
 def main():
 	"""main function"""
@@ -174,7 +184,7 @@ def main():
 			Particle(
 				(randint(0, 200), randint(0, 200)),
 				(randint(-1, 1), randint(-1, 1)),
-				(2, 16), "cyan"
+				(2, 4), "cyan"
 			)
 		)
 	clock = time.Clock()
@@ -183,6 +193,7 @@ def main():
 	while event.type != QUIT:
 		all_sprites.update()
 		particles.collisions(game_surface.get_bounding_rect(), player)
+		generate(particles, all_sprites)
 		particles.update()
 		game_surface.fill("black")
 		all_sprites.draw(game_surface)
