@@ -4,39 +4,60 @@ from collections import namedtuple
 from itertools import permutations
 from math import hypot
 from sys import float_info
+from multiprocessing import Pool
+from operator import methodcaller
+from itertools import repeat
+
+def collider(particles):
+	particles[0].collide(particles[1])
+
+def surface_collder(particle_surface):
+	particle_surface[0].collide(particle_surface[1])
+
+def updator(particle):
+	particle.update()
 
 def clamp(lower, x, upper):
 	return min(max(x, lower), upper)
 
-MAX_SPEED = 2
+MAX_SPEED = 1
 
 class Particles(list):
 	"""Particles list"""
+	def __init__(self):
+		self.pool = Pool(4)
 	
-	def collisions(self, surface):
+	def collisions(self, surface, player):
+		"""collisions"""
+		# self.pool.map(collider, permutations(self, 2))
 		for particle_0, particle_1 in permutations(self, 2):
 			particle_0.collide(particle_1)
+		# self.pool.map(surface_collder, zip(self, repeat(surface, len(self))))
 		for particle in self:
 			particle.collide(surface)
+			particle.smell_range(player)
 
 	def update(self):
 		"""Update particle nature"""
+		# self.pool.map(updator, self)
 		for particle in self:
 			particle.update()
 
 	def draw(self, surface):
 		"""Draw particles to surface"""
-		for particle in self:
-			surface.fill("green", particle)
+		for particle in filter(lambda x: x.visible, self):
+			surface.fill(particle.color, particle)
 
 
 class Particle:
 	"""Point pixel with inner and outer boundaries"""
 
-	def __init__(self, position, vector, radius):
+	def __init__(self, position, vector, radius, color):
 		self.pos = Vector2(*position)
 		self.vector = Vector2(*vector)
-		self.radius = namedtuple("radius", "inner outer")(*radius)
+		self.radius = radius
+		self.visible = False
+		self.color = color
 
 	def rect(self):
 		"""rectangle"""
@@ -48,14 +69,21 @@ class Particle:
 		self.vector.y = clamp(-MAX_SPEED, self.vector.y, MAX_SPEED)
 		self.pos.x += self.vector.x
 		self.pos.y += self.vector.y
-
+		
+	def smell_range(self, player):
+		if player.cone.top > self.pos.y or self.pos.y > player.cone.bottom:
+			self.visible = False
+		elif player.cone.left > self.pos.x or self.pos.x > player.cone.right:
+			self.visible = False
+		else:
+			self.visible = True
 
 	def collide(self, body):
 		"""collision physics"""
 		if not isinstance(body, type(self)):
 			if body.top > self.pos.y or self.pos.y > body.bottom:
 				self.vector.y *= -1
-			elif body.left > self.pos.x or self.pos.x > body.right:
+			if body.left > self.pos.x or self.pos.x > body.right:
 				self.vector.x *= -1
 			self.pos.x = clamp(body.left, self.pos.x, body.right)
 			self.pos.y = clamp(body.top, self.pos.y, body.bottom)
@@ -64,7 +92,7 @@ class Particle:
 		delta_x, delta_y = self.pos.x - body.pos.x, self.pos.y - body.pos.y
 		delta = hypot(delta_x, delta_y)
 
-		if delta < self.radius.outer + body.radius.outer:
+		if delta < self.radius[1] + body.radius[1]:
 			delta_vector_x = self.vector.x - body.vector.x
 			delta_vector_y = self.vector.y - body.vector.y
 			if delta > 0:
@@ -76,7 +104,7 @@ class Particle:
 				_sin, _cos, magnitude = (0,) * 3
 			new_delta_vector_x = -magnitude * _sin
 			new_delta_vector_y = -magnitude * _cos
-			if delta < self.radius.inner + body.radius.inner:
+			if delta < self.radius[0] + body.radius[0]:
 				self.vector.x -= new_delta_vector_x
 				self.vector.y -= new_delta_vector_y
 				body.vector.x += new_delta_vector_x

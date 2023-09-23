@@ -71,17 +71,34 @@ class Shroom(sprite.Sprite):
 class Player(sprite.Sprite):
 	"""Player Sprite"""
 
-	def __init__(self, image_path, frame_size):
+	def __init__(self, image_path, origin):
 		"""Initializer"""
 		super().__init__()
 		self.sprite_sheet = image.load(image_path).convert_alpha()
+		self.cone = Rect(0, 0, TILE_SIZE, TILE_SIZE)
 		self.current_frame = 0
 		self.state = RIGHT_IDLE
 		self.run = False
-		self.frame_size = frame_size
 		self.update_frames()
 		self.image = self.frames[self.current_frame]
 		self.rect = self.image.get_rect()
+		self.rect.centerx = origin[0]
+		self.rect.centery = origin[1]
+		self.set_cone()
+	
+	def set_cone(self):
+		if (self.state % 4) == RIGHT_IDLE:
+			self.cone.centerx = self.rect.centerx + TILE_SIZE
+			self.cone.centery = self.rect.centery
+		elif (self.state % 4) == LEFT_IDLE:
+			self.cone.centerx = self.rect.centerx - TILE_SIZE
+			self.cone.centery = self.rect.centery
+		elif (self.state % 4) == DOWN_IDLE:
+			self.cone.centerx = self.rect.centerx
+			self.cone.centery = self.rect.centery + TILE_SIZE
+		elif (self.state % 4) == UP_IDLE:
+			self.cone.centerx = self.rect.centerx
+			self.cone.centery = self.rect.centery - TILE_SIZE
 
 	def update_frames(self):
 		"""Change what frames are being used for the animation"""
@@ -91,10 +108,9 @@ class Player(sprite.Sprite):
 			self.frames.append(
 				subsurface(
 					Rect(
-						i * self.frame_size,
-						self.state * self.frame_size,
-						self.frame_size,
-						self.frame_size,
+						i * TILE_SIZE,
+						self.state * TILE_SIZE,
+						TILE_SIZE, TILE_SIZE,
 					)
 				)
 			)
@@ -102,7 +118,6 @@ class Player(sprite.Sprite):
 	def update(self):
 		"""Overwrite of Sprite updating"""
 		keys = key.get_pressed()
-		print(end=f"\x1B[2K{'x'*any(keys)}\r")
 		if any(keys):
 			if keys[K_LSHIFT]:
 				self.run = True
@@ -120,8 +135,10 @@ class Player(sprite.Sprite):
 				self.state = UP_WALKING + (4 if self.run else 0)
 			else:
 				self.run = False
-				self.state = max(0, self.state - 4)
+				if self.state >= 4:
+					self.state = max(0, self.state - 4)
 			self.update_frames()
+			self.set_cone()
 		elif self.state >= 8:
 			self.run = False
 			self.state = max(0, self.state - 8)
@@ -133,6 +150,7 @@ class Player(sprite.Sprite):
 		self.image = self.frames[self.current_frame]
 
 
+
 def main():
 	"""main function"""
 	init()
@@ -140,7 +158,7 @@ def main():
 	display.set_caption("Wolf Tracking Game")
 	game_surface = Surface((200, 200))
 	all_sprites = sprite.Group()
-	player = Player("Wolf.png", TILE_SIZE)
+	player = Player("Wolf.png", (30, 30))
 	all_sprites.add(player)
 	for _ in range(10):
 		all_sprites.add(
@@ -151,12 +169,12 @@ def main():
 			)
 		)
 	particles = Particles()
-	for _ in range(100):
+	for _ in range(350):
 		particles.append(
 			Particle(
 				(randint(0, 200), randint(0, 200)),
 				(randint(-1, 1), randint(-1, 1)),
-				(2, 4),
+				(2, 16), "cyan"
 			)
 		)
 	clock = time.Clock()
@@ -164,7 +182,7 @@ def main():
 	event = event_queue.wait(1)
 	while event.type != QUIT:
 		all_sprites.update()
-		particles.collisions(game_surface.get_bounding_rect())
+		particles.collisions(game_surface.get_bounding_rect(), player)
 		particles.update()
 		game_surface.fill("black")
 		all_sprites.draw(game_surface)
