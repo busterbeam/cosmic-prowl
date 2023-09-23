@@ -78,7 +78,7 @@ class Player(sprite.Sprite):
 		self.cone = Rect(0, 0, TILE_SIZE, TILE_SIZE)
 		self.current_frame = 0
 		self.state = RIGHT_IDLE
-		self.run = False
+		self.run = (1, 0)
 		self.update_frames()
 		self.image = self.frames[self.current_frame]
 		self.rect = self.image.get_rect()
@@ -120,27 +120,27 @@ class Player(sprite.Sprite):
 		keys = key.get_pressed()
 		if any(keys):
 			if keys[K_LSHIFT]:
-				self.run = True
+				self.run = (2, 4)
 			if keys[K_RIGHT] or keys[K_d]:
-				self.rect.x += PLAYER_SPEED * (2 if self.run else 1)
-				self.state = RIGHT_WALKING + (4 if self.run else 0)
+				self.rect.x += PLAYER_SPEED * self.run[0]
+				self.state = RIGHT_WALKING + self.run[1]
 			elif keys[K_LEFT] or keys[K_a]:
-				self.rect.x -= PLAYER_SPEED * (2 if self.run else 1)
-				self.state = LEFT_WALKING + (4 if self.run else 0)
+				self.rect.x -= PLAYER_SPEED * self.run[0]
+				self.state = LEFT_WALKING + self.run[1]
 			elif keys[K_DOWN] or keys[K_s]:
-				self.rect.y += PLAYER_SPEED * (2 if self.run else 1)
-				self.state = DOWN_WALKING + (4 if self.run else 0)
+				self.rect.y += PLAYER_SPEED * self.run[0]
+				self.state = DOWN_WALKING + self.run[1]
 			elif keys[K_UP] or keys[K_w]:
-				self.rect.y -= PLAYER_SPEED * (2 if self.run else 1)
-				self.state = UP_WALKING + (4 if self.run else 0)
+				self.rect.y -= PLAYER_SPEED * self.run[0]
+				self.state = UP_WALKING + self.run[1]
 			else:
-				self.run = False
+				self.run = (1, 0)
 				if self.state >= 4:
 					self.state = max(0, self.state - 4)
 			self.update_frames()
 			self.set_cone()
 		elif self.state >= 8:
-			self.run = False
+			self.run = (1, 0)
 			self.state = max(0, self.state - 8)
 			self.update_frames()
 		elif self.state >= 4:
