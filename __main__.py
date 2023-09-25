@@ -41,15 +41,20 @@ class Shroom(sprite.Sprite):
 			3 * TILE_SIZE, 2 * TILE_SIZE, TILE_SIZE, TILE_SIZE
 		)
 		self.rect = Rect(origin, self.image.get_rect()[2:])
-		self.particle = ((randint(-10, 10), randint(-10, 10)), (1, 2), "green", 2)
+		self.particle = ((10, 10), (1, 2), "green", 2)
 
 
+LAST_GENERATE = time.get_ticks()
 def generate(particles, sprites):
 	"""Get all sprites to emit particles"""
+	global LAST_GENERATE
 	for sprite in sprites:
-		particles.append(
-			Particle((sprite.rect.centerx, sprite.rect.centery), *sprite.particle)
-		)
+		if time.get_ticks() - LAST_GENERATE > 30:
+			particles.append(
+				Particle((sprite.rect.centerx, sprite.rect.centery), *sprite.particle)
+			)
+			LAST_GENERATE = time.get_ticks()
+		
 
 
 def main():
@@ -69,15 +74,6 @@ def main():
 			)
 		)
 	particles = Particles()
-	for _ in range(350):
-		particles.append(
-			Particle(
-				(randint(0, 400), randint(0, 400)),
-				(randint(-1, 1), randint(-1, 1)),
-				(2, 4),
-				"cyan",
-			)
-		)
 	bear = Bear("Bear.png", (200, 200), game_surface, particles)
 	all_sprites.add(bear)
 	clock = time.Clock()
@@ -86,6 +82,7 @@ def main():
 	while event.type != QUIT:
 		all_sprites.update()
 		particles.collisions(game_surface.get_bounding_rect(), player)
+		particles.collisions(game_surface.get_bounding_rect(), bear)
 		generate(particles, all_sprites)
 		particles.update()
 		game_surface.fill("black")

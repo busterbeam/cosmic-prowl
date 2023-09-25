@@ -3,6 +3,7 @@ from itertools import permutations
 from math import hypot
 from pygame.math import Vector2
 from pygame import Rect
+from random import randint
 
 
 def collider(particles):
@@ -44,7 +45,7 @@ class Particles(list):
 
 	def draw(self, surface):
 		"""Draw particles to surface"""
-		for particle in filter(lambda x: x.visible, self):
+		for particle in self: # filter(lambda x: x.visible, self):
 			surface.fill(particle.color, particle)
 
 
@@ -53,7 +54,7 @@ class Particle:
 
 	def __init__(self, position, vector, radius, color, decay=-1):
 		self.pos = Vector2(*position)
-		self.vector = Vector2(*vector)
+		self.vector = Vector2(randint(-vector[0], vector[0]), randint(-vector[1], vector[1]))
 		self.radius = radius
 		self.visible = False
 		self.color = color

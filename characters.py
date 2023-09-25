@@ -1,5 +1,5 @@
 """characters"""
-from random import choice
+from random import choice, randint
 from time import time
 
 from pygame import sprite, Rect, image, key
@@ -98,7 +98,7 @@ class Bear(Character):
 	def __init__(self, image_path, origin, surface, particles):
 		"""Initizializer"""
 		super().__init__(image_path, origin)
-		self.particle = ((0, 0), (2, 16), "red", 20)
+		self.particle = ((1, 1), (2, 16), "red", 50)
 		self.last_smelt = -1
 		self.internal_clock = time()
 		self.move = choice([self.right, self.left, self.up, self.down])
@@ -162,7 +162,7 @@ class Player(Character):
 	def __init__(self, image_path, origin):
 		"""Initializer"""
 		super().__init__(image_path, origin)
-		self.particle = ((0, 0), (2, 16), "pink", 20)
+		self.particle = ((1, 1), (2, 16), "pink", 50)
 		self.set_cone()
 
 	def set_cone(self):
