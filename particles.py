@@ -45,7 +45,7 @@ class Particles(list):
 
 	def draw(self, surface):
 		"""Draw particles to surface"""
-		for particle in self: # filter(lambda x: x.visible, self):
+		for particle in filter(lambda x: x.visible, self):
 			surface.fill(particle.color, particle)
 
 

@@ -82,7 +82,6 @@ def main():
 	while event.type != QUIT:
 		all_sprites.update()
 		particles.collisions(game_surface.get_bounding_rect(), player)
-		particles.collisions(game_surface.get_bounding_rect(), bear)
 		generate(particles, all_sprites)
 		particles.update()
 		game_surface.fill("black")

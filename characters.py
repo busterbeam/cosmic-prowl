@@ -40,7 +40,6 @@ class Character(sprite.Sprite):
 		"""Initializer"""
 		super().__init__()
 		self.sprite_sheet = image.load(image_path).convert_alpha()
-		self.cone = Rect(0, 0, TILE_SIZE, TILE_SIZE)
 		self.current_frame = 0
 		self.state = RIGHT_IDLE
 		self.run = (1, 0)
@@ -162,22 +161,23 @@ class Player(Character):
 		"""Initializer"""
 		super().__init__(image_path, origin)
 		self.particle = ((1, 1), (2, 16), "pink", 50)
+		self.cone = Rect(0, 0, TILE_SIZE*2, TILE_SIZE*2)
 		self.set_cone()
 
 	def set_cone(self):
 		"""set area for smelling cone"""
 		if (self.state % 4) == RIGHT_IDLE:
-			self.cone.centerx = self.rect.centerx + TILE_SIZE
+			self.cone.centerx = self.rect.centerx + TILE_SIZE*2
 			self.cone.centery = self.rect.centery
 		elif (self.state % 4) == LEFT_IDLE:
-			self.cone.centerx = self.rect.centerx - TILE_SIZE
+			self.cone.centerx = self.rect.centerx - TILE_SIZE*2
 			self.cone.centery = self.rect.centery
 		elif (self.state % 4) == DOWN_IDLE:
 			self.cone.centerx = self.rect.centerx
-			self.cone.centery = self.rect.centery + TILE_SIZE
+			self.cone.centery = self.rect.centery + TILE_SIZE*2
 		elif (self.state % 4) == UP_IDLE:
 			self.cone.centerx = self.rect.centerx
-			self.cone.centery = self.rect.centery - TILE_SIZE
+			self.cone.centery = self.rect.centery - TILE_SIZE*2
 
 	def update(self):
 		"""Overwrite of Sprite updating"""
