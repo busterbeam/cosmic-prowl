@@ -48,12 +48,12 @@ LAST_GENERATE = time.get_ticks()
 def generate(particles, sprites):
 	"""Get all sprites to emit particles"""
 	global LAST_GENERATE
-	for sprite in sprites:
-		if time.get_ticks() - LAST_GENERATE > 30:
+	if time.get_ticks() - LAST_GENERATE > 150:
+		for sprite in sprites:
 			particles.append(
 				Particle((sprite.rect.centerx, sprite.rect.centery), *sprite.particle)
 			)
-			LAST_GENERATE = time.get_ticks()
+		LAST_GENERATE = time.get_ticks()
 		
 
 

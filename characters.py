@@ -98,7 +98,7 @@ class Bear(Character):
 	def __init__(self, image_path, origin, surface, particles):
 		"""Initizializer"""
 		super().__init__(image_path, origin)
-		self.particle = ((1, 1), (2, 16), "red", 50)
+		self.particle = ((2, 2), (2, 16), "red", 50)
 		self.last_smelt = -1
 		self.internal_clock = time()
 		self.move = choice([self.right, self.left, self.up, self.down])
@@ -126,7 +126,6 @@ class Bear(Character):
 		"""TODO
 		search particles infront of bear for players particles
 		return true if they are players
-
 		"""
 		return False
 
