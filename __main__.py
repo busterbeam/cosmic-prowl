@@ -48,7 +48,7 @@ LAST_GENERATE = time.get_ticks()
 def generate(particles, sprites):
 	"""Get all sprites to emit particles"""
 	global LAST_GENERATE
-	if time.get_ticks() - LAST_GENERATE > 150:
+	if time.get_ticks() - LAST_GENERATE > 35:
 		for sprite in sprites:
 			particles.append(
 				Particle((sprite.rect.centerx, sprite.rect.centery), *sprite.particle)
@@ -64,35 +64,37 @@ def main():
 	display.set_caption("Wolf Tracking Game")
 	game_surface = Surface(MINIMUM)
 	all_sprites = sprite.Group()
-	player = Player("Wolf.png", (30, 30))
+	player = Player("assests/Wolf.png", (30, 30))
 	all_sprites.add(player)
 	for _ in range(10):
 		all_sprites.add(
 			Shroom(
-				"GrassNDirt.png",
+				"assests/GrassNDirt.png",
 				(randint(0, 25) * TILE_SIZE, randint(0, 25) * TILE_SIZE),
 			)
 		)
 	particles = Particles()
-	bear = Bear("Bear.png", (200, 200), game_surface, particles)
+	bear = Bear("assests/Bear.png", (200, 200), game_surface, particles)
 	all_sprites.add(bear)
 	clock = time.Clock()
+	last_time = time.get_ticks()
 	event_queue.pump()
 	event = event_queue.wait(1)
 	while event.type != QUIT:
-		all_sprites.update()
-		particles.collisions(game_surface.get_bounding_rect(), player)
-		generate(particles, all_sprites)
-		particles.update()
-		game_surface.fill("black")
-		all_sprites.draw(game_surface)
-		particles.draw(game_surface)
-		frame = transform.scale(game_surface, SCREEN)
-		screen.blit(frame, (0, 0))
-		display.flip()
-		clock.tick(15)
+		if time.get_ticks() - last_time > 50:
+			all_sprites.update()
+			particles.collisions(game_surface.get_bounding_rect(), player)
+			generate(particles, all_sprites)
+			particles.update()
+			game_surface.fill("black")
+			all_sprites.draw(game_surface)
+			particles.draw(game_surface)
+			frame = transform.scale(game_surface, SCREEN)
+			screen.blit(frame, (0, 0))
+			display.flip()
+			last_time = time.get_ticks()
 		event_queue.pump()
-		event = event_queue.wait(5)
+		event = event_queue.wait(1)
 	game_quit()
 
 

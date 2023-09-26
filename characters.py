@@ -97,7 +97,7 @@ class Bear(Character):
 	def __init__(self, image_path, origin, surface, particles):
 		"""Initizializer"""
 		super().__init__(image_path, origin)
-		self.particle = ((2, 2), (2, 16), "red", 50)
+		self.particle = ((2, 2), (2, 16), "red", 100)
 		self.last_smelt = -1
 		self.internal_clock = time()
 		self.move = choice([self.right, self.left, self.up, self.down])
@@ -122,18 +122,37 @@ class Bear(Character):
 			)
 
 	def smells_player(self):
+		rect = Rect(self.rect)
+		if (self.state % 4) == RIGHT_IDLE:
+			rect.centerx += TILE_SIZE * 2
+		elif (self.state % 4) == LEFT_IDLE:
+			rect.centerx -= TILE_SIZE * 2
+		elif (self.state % 4) == DOWN_IDLE:
+			rect.centery += TILE_SIZE * 2
+		elif (self.state % 4) == UP_IDLE:
+			rect.centery -= TILE_SIZE * 2
+		count = 0
+		for particle in filter(lambda p: p.color not in ["red", "green"], self.particles):
+			count += 1 if particle in rect else 0
+		print(end=f"\x1b[2K I smell {count} wolf blood!\r")
+		return count
+	
+	def smells_self(self):
 		"""TODO
-		search particles infront of bear for players particles
-		return true if they are players
+		search particles infront of bear
 		"""
 		return False
 
 	def update(self):
 		"""update"""
 		rect = self.surface.get_bounding_rect()
+		# scent check
 		if self.smells_player():
 			self.internal_clock = time()
-		elif self.rect.top < rect.top:
+		elif self.smells_self():
+			self.internal_clock = time()
+		# border check
+		if self.rect.top < rect.top:
 			self.move = self.down
 			self.internal_clock = time()
 		elif self.rect.bottom > rect.bottom:
@@ -145,7 +164,9 @@ class Bear(Character):
 		elif self.rect.right > rect.right:
 			self.move = self.left
 			self.internal_clock = time()
-		elif time() - self.internal_clock > 3:
+		# time check
+		if time() - self.internal_clock > 3:
+			# should add a rotation feature to checks smells to either side
 			self.move = choice([self.right, self.left, self.up, self.down])
 			self.internal_clock = time()
 		self.move()
@@ -160,7 +181,7 @@ class Player(Character):
 	def __init__(self, image_path, origin):
 		"""Initializer"""
 		super().__init__(image_path, origin)
-		self.particle = ((1, 1), (2, 16), "pink", 50)
+		self.particle = ((2, 2), (2, 16), "pink", 100)
 		self.cone = Rect(0, 0, TILE_SIZE*2, TILE_SIZE*2)
 		self.set_cone()
 
