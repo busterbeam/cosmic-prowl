@@ -48,6 +48,7 @@ class Character(sprite.Sprite):
 		self.rect = self.image.get_rect()
 		self.rect.centerx = origin[0]
 		self.rect.centery = origin[1]
+		self.last_sample = time()
 
 	def update_frames(self):
 		"""Change what frames are being used for the animation"""
@@ -83,12 +84,18 @@ class Character(sprite.Sprite):
 		"""down"""
 		self.rect.y += PLAYER_SPEED * self.run[0]
 		self.state = DOWN_WALKING + self.run[1]
+	
+	def sample(self):
+		"""This move checks 360 around the character"""
+		self.run = (1, 0)
+		if time() - self.last_sample > .5:
+			self.state = (self.state + 1) % 4
+			self.last_sample = time()
 
 	def idle(self):
 		"""idle"""
 		self.run = (1, 0)
-		if self.state >= 4:
-			self.state = max(0, self.state - 4)
+		self.state %= 4
 
 
 class Bear(Character):
@@ -149,6 +156,7 @@ class Bear(Character):
 		# scent check
 		if self.smells_player():
 			self.internal_clock = time()
+			self.move = self.sample
 		elif self.smells_self():
 			self.internal_clock = time()
 		# border check
